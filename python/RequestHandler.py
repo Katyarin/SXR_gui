@@ -1,24 +1,26 @@
 import python.process.example as example
+import python.process.signals as signals
 
 
 def __init__():
     return
 
-
+SXR_path = 'c:/work/SXR_ML/'
+models_path = 'Models/Good/'
 class Handler:
     def __init__(self):
         self.HandlingTable = {
-            'example_group': {
-                'example_action': self.do_example
-            },
-            'adc': {
-            },
-            'laser': {
-            },
+           ''' 'models': {
+                'select': self.select_model
+            },'''
             'view': {
-                'refresh': self.refresh_func
+                'refresh': self.refresh_func,
+                'get_shot': self.get_shot,
+                'selected_signals': self.view_sig
+                #'obtain_Te': self.Te_prediction
             }
         }
+        self.models_path = '%s%s' % (SXR_path, model_path)
         return
 
     def handle_request(self, req):
@@ -31,13 +33,13 @@ class Handler:
         else:
             return {'ok': False, 'description': 'Reqtype is not listed.'}
 
-    def do_example(self, req):
-        if 'argument' not in req:
+    def get_shot(self, req):
+        if 'shotn' not in req:
             return {
                 'ok': False,
-                'description': 'Request is missing field "argument".'
+                'description': 'Request is missing field "shotn".'
             }
-        resp = example.process(req['argument'])
+        resp = {'ok': True, 'header': req['shotn']}
         # m.b. check resp for errors
         return resp
 
@@ -46,3 +48,16 @@ class Handler:
             'ok': True,
             'description': 'Alive'
         }
+
+    def view_sig(self, req):
+        if 'shotn' not in req:
+            return {
+                'ok': False,
+                'description': 'Request is missing field "shotn".'
+            }
+        if 'selected_signals' not in req:
+            return {
+                'ok': False,
+                'description': 'Request is missing field "selected_signals".'
+            }
+        resp = signals.process(req['shotn'], req['selected_signals'])
