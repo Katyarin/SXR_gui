@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Electron temperature by SXR</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+
+    <link rel="apple-touch-icon" sizes="120x120" href="icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+    <link rel="mask-icon" href="icons/safari-pinned-tab.svg" color="#5bbad5">
+    <link rel="shortcut icon" href="icons/favicon.ico">
+    <meta name="msapplication-TileColor" content="#00aba9">
+    <meta name="msapplication-config" content="html/icons/browserconfig.xml">
+    <meta name="theme-color" content="#ffffff">
+</head>
+
+<body>
+
+<script src="js/jquery.js"></script>
+<script src="js/bootstrap.min.js"></script>
+<script type="text/javascript" src="js/jquery.canvasjs.stock.min.js"></script>
+
+<div>
+    <div class="row" id="menu_container">
+        <nav class="navbar navbar-inverse">
+            <div class="container-fluid">
+                <div class="navbar-header">
+                    <a class="navbar-brand" href="#">
+                        Electron temperature by SXR
+                    </a>
+                </div>
+                <ul class="nav navbar-nav">
+                    <button class="btn btn-success navbar-btn" id="conf_btn">
+                        Configuration
+                    </button>
+                    <!--<button class="btn btn-success navbar-btn" id="acquire_btn">
+                        Acquisition
+                    </button>
+                    <button class="btn btn-success navbar-btn" id="calibr_btn">
+                        Calibration
+                    </button>-->
+                    <button class="btn btn-success navbar-btn" id="view_btn">
+                        View
+                    </button>
+
+                </ul>
+            </div>
+        </nav>
+    </div>
+
+    <div class="container-fluid" id="main_container"></div>
+
+</div>
+
+
+<script>
+    $(document).ready(
+        function () {
+            this.m_container = $('#main_container');
+            this.m_css = `
+<style>
+    table, th, td {
+        border: 1px solid black;
+        border-collapse: collapse;
+        padding: 5px;
+    }
+</style>
+`;
+
+            this.Request = function (req, callback) {
+                req.subsystem = 'common';
+                $.post('/api', JSON.stringify(req), callback, 'json');
+            };
+
+            this.displayConfig = function(ev) {
+                let self = ev.data;
+                console.log('display config');
+                self.m_container.empty();
+                self.m_container.load('js/configSection.html');
+            };
+
+            this.displayAcq = function(ev) {
+                let self = ev.data;
+                //console.log('display acquire');
+                self.m_container.empty();
+                self.m_container.load('js/acquisitionSection.html');
+            };
+
+            this.displayCalibr = function(ev) {
+                let self = ev.data;
+                console.log('display calibr');
+                self.m_container.empty();
+                self.m_container.load('js/calibrSection.html');
+            };
+
+            this.displayView = function(ev) {
+                let self = ev.data;
+                //console.log('display view');
+                self.m_container.empty();
+                self.m_container.load('js/viewSection.html');
+            };
+
+            this.BuildControls = function () {
+                $('#conf_btn').on('click', this, this.displayConfig);
+                $('#acquire_btn').on('click', this, this.displayAcq);
+                $('#calibr_btn').on('click', this, this.displayCalibr);
+                $('#view_btn').on('click', this, this.displayView);
+                this.displayView({data: this});
+            };
+
+            this.BuildControls();
+        }
+    )
+</script>
+
+</body>
+</html>
