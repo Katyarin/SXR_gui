@@ -20,7 +20,7 @@ class Handler:
                 #'obtain_Te': self.Te_prediction
             }
         }
-        self.models_path = '%s%s' % (SXR_path, model_path)
+        self.models_path = '%s%s' % (SXR_path, models_path)
         return
 
     def handle_request(self, req):
@@ -60,4 +60,4 @@ class Handler:
                 'ok': False,
                 'description': 'Request is missing field "selected_signals".'
             }
-        resp = signals.process(req['shotn'], req['selected_signals'])
+        resp = signals.sht_view(req['shotn'], req['selected_signals'])
