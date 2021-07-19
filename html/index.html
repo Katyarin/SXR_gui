@@ -34,8 +34,8 @@
                     </a>
                 </div>
                 <ul class="nav navbar-nav">
-                    <button class="btn btn-success navbar-btn" id="conf_btn">
-                        Configuration
+                    <button class="btn btn-success navbar-btn" id="new_btn">
+                        New
                     </button>
                     <!--<button class="btn btn-success navbar-btn" id="acquire_btn">
                         Acquisition
@@ -76,26 +76,13 @@
                 $.post('/api', JSON.stringify(req), callback, 'json');
             };
 
-            this.displayConfig = function(ev) {
+            this.displayNew = function(ev) {
                 let self = ev.data;
                 console.log('display config');
                 self.m_container.empty();
-                self.m_container.load('js/configSection.html');
+                self.m_container.load('js/new_viewSection.html');
             };
 
-            this.displayAcq = function(ev) {
-                let self = ev.data;
-                //console.log('display acquire');
-                self.m_container.empty();
-                self.m_container.load('js/acquisitionSection.html');
-            };
-
-            this.displayCalibr = function(ev) {
-                let self = ev.data;
-                console.log('display calibr');
-                self.m_container.empty();
-                self.m_container.load('js/calibrSection.html');
-            };
 
             this.displayView = function(ev) {
                 let self = ev.data;
@@ -105,11 +92,9 @@
             };
 
             this.BuildControls = function () {
-                $('#conf_btn').on('click', this, this.displayConfig);
-                $('#acquire_btn').on('click', this, this.displayAcq);
-                $('#calibr_btn').on('click', this, this.displayCalibr);
+                $('#new_btn').on('click', this, this.displayNew);
                 $('#view_btn').on('click', this, this.displayView);
-                this.displayView({data: this});
+                this.displayNew({data: this});
             };
 
             this.BuildControls();

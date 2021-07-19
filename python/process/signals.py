@@ -49,13 +49,19 @@ def do_normal_data(data, shotn):
     beauty_data = {}
 
     for key in data_clean.keys():
-        beauty_data[change_dict[key]] = data_clean[key]
+        if key == 'Shotn' or key == 'time':
+            beauty_data[key] = data_clean[key]
+        else:
+            beauty_data[change_dict[key]] = data_clean[key]
 
     return beauty_data
 
 
 def sht_view(shotn, signals):
     print('shot selected: ', shotn, 'signals selected: ', signals)
+    print(signals)
+    if 'HXR' in signals:
+        signals[signals.index('HXR')] = 'НXR Подушниковой'
     if int(shotn) > 40087:
         if 'SXR 27' in signals:
             return {
@@ -68,8 +74,8 @@ def sht_view(shotn, signals):
                 'ok': False,
                 'descriptions': 'foil 127 mkm not installed yet, you need 27 mkm'
             }
-    raw_data = get_data(shotn, signals)
-    result_data = do_normal_data(raw_data, shotn)
+    raw_data = get_data(int(shotn), signals)
+    result_data = do_normal_data(raw_data, int(shotn))
     return {
         'ok': True,
         'data': result_data

@@ -216,6 +216,11 @@
             isShowSingleEvent: $('#is_show'),
             shotn: $('#shot_select'),
             isPlasma: $('#is_plasma'),
+            SXR15: $('#SXR_15'),
+            SXR27: $('#SXR_27'),
+            SXR50: $('#SXR_50'),
+            SXR80: $('#SXR_80'),
+            SXR127: $('#SXR_127')
         };
 
 
@@ -312,8 +317,6 @@
             axisX: {
                 title: "Time, ms",
                 titleFontSize: 12,
-                minimum: this.m_defaults.time_min,
-                maximum: this.m_defaults.time_max,
                 crosshair: {
                     enabled: true,
                     snapToDataPoint: true,
@@ -416,11 +419,10 @@
                         nullDataLineDashType: "dot",
                         dataPoints: [],
                         click: function (event) {
-                            this.ShowEvent(event, poly_ind);
+                            this.ShowEvent(event);
                         }.bind(this)
                     }
                 );
-
 
                 for (let event_ind = 0; event_ind < this.data_example.length; event_ind++) {
                     this.m_T_evo_chart.options.data[0].dataPoints.push(
@@ -435,18 +437,70 @@
                  */
                 }
             }
+
+
+            this.m_SXR_27_plot.options.data.push(
+                {
+                    type: "line",
+                    color: this.palette[1],
+                    visible: true,
+                    markerType: "none",
+                    //showInLegend: true,
+                    connectNullData: true,
+                    nullDataLineDashType: "dot",
+                    dataPoints: [],
+                    click: function (event) {
+                        this.ShowEvent(event);
+                    }.bind(this)
+                }
+            );
+
             this.m_T_evo_chart.render();
             this.m_SXR_27_plot.render();
         };
 
         this.Select = function () {
-            let shotn = this.selectors.shotn.val();
-            let is_plasma = this.selectors.isPlasma[0].checked;
-            console.log('Select function called.', shotn, is_plasma);
+            let shotn = $('#shotn_man').val();
+            console.log('Shot number is', shotn);
         };
 
-        this.ShowEvent = function (ev, poly_ind) {
-            console.log('showing', ev, poly_ind);
+        this.Sht_load = function () {
+            let shotn = $('#shotn_man').val();
+            let sht_list = [this.selectors.SXR15[0].checked, this.selectors.SXR27[0].checked, this.selectors.SXR50[0].checked,
+                this.selectors.SXR80[0].checked, this.selectors.SXR127[0].checked];
+            let sht_all = ['SXR 15', 'SXR 27', 'SXR 50', 'SXR 80', 'SXR 127'];
+            let sht_use = []
+            for (let sht=0; sht<sht_list.length; sht++) {
+                if (sht_list[sht])
+                    sht_use.push(sht_all[sht]);
+            }
+            this.Request(
+                {
+                    subsystem: 'view',
+                    reqtype: 'selected_signals',
+                    shotn: shotn,
+                    selected_signals: sht_use
+                }, function (resp) {
+                    console.log(resp);
+                    let data = resp['data'];
+                    console.log(data);
+
+                    for (let event_ind = 0; event_ind < data['time'].length; event_ind++) {
+                        this.m_SXR_27_plot.options.data[0].dataPoints.push(
+                            {
+                                x: data['time'][event_ind],
+                                y: data['SXR 15'][event_ind]
+                            }
+                        );
+                    }
+                    this.m_SXR_27_plot.render();
+                }.bind(this)
+            );
+            console.log('Req out');
+        };
+
+        this.ShowEvent = function (ev) {
+            console.log('showing', ev);
             this.selectors.singleEventPopup.removeAttribute('hidden');
         };
 
@@ -499,6 +553,8 @@
 
         this.ConnectControls = function () {
             $('#shot_refresh').on('click', this, this.Refresh.bind(this));
+            $('#shotn_man').on('change', this, this.Select.bind(this));
+            $('#plot_sht').on('click', this, this.Sht_load.bind(this));
             this.selectors.shotn.on('change', this, this.Select.bind(this));
             this.selectors.isPlasma.on('change', this, this.UpdateShotSelect.bind(this));
             $(document).keydown(function (event) {

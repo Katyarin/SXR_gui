@@ -10,9 +10,6 @@ models_path = 'Models/Good/'
 class Handler:
     def __init__(self):
         self.HandlingTable = {
-           ''' 'models': {
-                'select': self.select_model
-            },'''
             'view': {
                 'refresh': self.refresh_func,
                 'get_shot': self.get_shot,
@@ -61,3 +58,4 @@ class Handler:
                 'description': 'Request is missing field "selected_signals".'
             }
         resp = signals.sht_view(req['shotn'], req['selected_signals'])
+        return resp
