@@ -60,19 +60,24 @@ def do_normal_data(data, shotn):
 def sht_view(shotn, signals):
     print('shot selected: ', shotn, 'signals selected: ', signals)
     print(signals)
+    if shotn == '':
+        return {
+            'ok': False,
+            'description': 'Введите номер разряда'
+        }
     if 'HXR' in signals:
         signals[signals.index('HXR')] = 'НXR Подушниковой'
     if int(shotn) > 40087:
         if 'SXR 27' in signals:
             return {
                 'ok': False,
-                'descriptions': 'foil 27 mkm was deleted, you need 127 mkm'
+                'description': 'foil 27 mkm was deleted, you need 127 mkm'
             }
     else:
         if 'SXR 127' in signals:
             return {
                 'ok': False,
-                'descriptions': 'foil 127 mkm not installed yet, you need 27 mkm'
+                'description': 'foil 127 mkm not installed yet, you need 27 mkm'
             }
     raw_data = get_data(int(shotn), signals)
     result_data = do_normal_data(raw_data, int(shotn))
@@ -80,3 +85,62 @@ def sht_view(shotn, signals):
         'ok': True,
         'data': result_data
     }
+
+def Te_prediction(shotn, signals):
+    data = sht_view(shotn, signals)['data']
+
+    if 'SXR 15' in signals and 'SXR 27' in signals and 'SXR 50' in signals and 'SXR 80' in signals:
+        if 'HXR' in signals and 'CIII' in signals:
+            print('all')
+        elif 'HXR' in signals:
+            print('hxr')
+        elif 'CIII' in signals:
+            print('ciii')
+        else:
+            print('just all sxr')
+    elif 'SXR 15' in signals and 'SXR 27' in signals and 'SXR 50' in signals:
+        if 'HXR' in signals and 'CIII' in signals:
+            print('all')
+        elif 'HXR' in signals:
+            print('hxr')
+        elif 'CIII' in signals:
+            print('ciii')
+        else:
+            print('just all sxr')
+    elif 'SXR 15' in signals and 'SXR 27' in signals and 'SXR 80' in signals:
+        if 'HXR' in signals and 'CIII' in signals:
+            print('all')
+        elif 'HXR' in signals:
+            print('hxr')
+        elif 'CIII' in signals:
+            print('ciii')
+        else:
+            print('just all sxr')
+    elif 'SXR 15' in signals and 'SXR 50' in signals and 'SXR 80' in signals:
+        if 'HXR' in signals and 'CIII' in signals:
+            print('all')
+        elif 'HXR' in signals:
+            print('hxr')
+        elif 'CIII' in signals:
+            print('ciii')
+        else:
+            print('just all sxr')
+    elif 'SXR 27' in signals and 'SXR 50' in signals and 'SXR 80' in signals:
+        if 'HXR' in signals and 'CIII' in signals:
+            print('all')
+        elif 'HXR' in signals:
+            print('hxr')
+        elif 'CIII' in signals:
+            print('ciii')
+        else:
+            print('just all sxr')
+    elif 'SXR 127' in signals:
+        return {
+            'ok': False,
+            'description': 'Расчет температуры с фольгой 127 мкм пока недоступен'
+        }
+    else:
+        return {
+            'ok': False,
+            'description': 'Пожалуйста, выберите хотя бы 3 SXR сигнала'
+        }

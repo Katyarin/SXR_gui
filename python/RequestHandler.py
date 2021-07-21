@@ -13,8 +13,8 @@ class Handler:
             'view': {
                 'refresh': self.refresh_func,
                 'get_shot': self.get_shot,
-                'selected_signals': self.view_sig
-                #'obtain_Te': self.Te_prediction
+                'selected_signals': self.view_sig,
+                'get_temp': self.get_te
             }
         }
         self.models_path = '%s%s' % (SXR_path, models_path)
@@ -59,3 +59,15 @@ class Handler:
             }
         resp = signals.sht_view(req['shotn'], req['selected_signals'])
         return resp
+
+    def get_te(self, req):
+        if 'shotn' not in req:
+            return {
+                'ok': False,
+                'description': 'Request is missing field "shotn".'
+            }
+        if 'selected_signals' not in req:
+            return {
+                'ok': False,
+                'description': 'Request is missing field "selected_signals".'
+            }
