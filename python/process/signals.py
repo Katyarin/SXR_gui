@@ -1,6 +1,15 @@
 import python.process.ripper as ripper
 from scipy.signal import savgol_filter
 import numpy as np
+import joblib
+import pandas as pd
+
+model_path = 'c:/work/SXR_ML/Models/Good/'
+
+def smooth(y, box_pts):
+    box = np.ones(box_pts)/box_pts
+    y_smooth = np.convolve(y, box, mode='same')
+    return y_smooth
 
 def get_data(shotn, data):
     raw_data, link = ripper.extract('//172.16.12.127/data', shotn, data)
@@ -79,61 +88,86 @@ def sht_view(shotn, signals):
                 'ok': False,
                 'description': 'foil 127 mkm not installed yet, you need 27 mkm'
             }
-    raw_data = get_data(int(shotn), signals)
+    k = 0
+    try:
+        raw_data = get_data(int(shotn), signals)
+    except IndexError:
+        return {
+            'ok': False,
+            'description': 'Один из выбранных сигналов недоступен'
+        }
     result_data = do_normal_data(raw_data, int(shotn))
+    if 'НXR Подушниковой' in signals:
+        signals[signals.index('НXR Подушниковой')] = 'HXR'
     return {
         'ok': True,
         'data': result_data
     }
 
 def Te_prediction(shotn, signals):
-    data = sht_view(shotn, signals)['data']
-
+    first = sht_view(shotn, signals)
+    if first['ok'] == False:
+        return first
+    data = first['data']
+    norm_data = pd.DataFrame(data)
     if 'SXR 15' in signals and 'SXR 27' in signals and 'SXR 50' in signals and 'SXR 80' in signals:
         if 'HXR' in signals and 'CIII' in signals:
-            print('all')
+            model = 'PART3_RNDe34d19msl11_HXR_SXR_with_zeros100_immisC_time.joblib'
+            work_data = norm_data.drop('Shotn', axis=1)
+            print('ok 1')
         elif 'HXR' in signals:
-            print('hxr')
+            return {
+                'ok': False,
+                'description': 'Not done yet 1'
+            }
         elif 'CIII' in signals:
-            print('ciii')
+            return {
+                'ok': False,
+                'description': 'Not done yet 2'
+            }
         else:
-            print('just all sxr')
+            model = 'NEW_SEASON1_RNDe30d19msl7_SXR.joblib'
+            work_data = norm_data.drop('Shotn', axis=1)
     elif 'SXR 15' in signals and 'SXR 27' in signals and 'SXR 50' in signals:
-        if 'HXR' in signals and 'CIII' in signals:
-            print('all')
-        elif 'HXR' in signals:
-            print('hxr')
-        elif 'CIII' in signals:
-            print('ciii')
-        else:
-            print('just all sxr')
+        return {
+            'ok': False,
+            'description': 'Not done yet'
+        }
     elif 'SXR 15' in signals and 'SXR 27' in signals and 'SXR 80' in signals:
         if 'HXR' in signals and 'CIII' in signals:
-            print('all')
+            return {
+                'ok': False,
+                'description': 'Not done yet'
+            }
         elif 'HXR' in signals:
-            print('hxr')
+            return {
+                'ok': False,
+                'description': 'Not done yet'
+            }
         elif 'CIII' in signals:
-            print('ciii')
+            return {
+                'ok': False,
+                'description': 'Not done yet'
+            }
         else:
             print('just all sxr')
     elif 'SXR 15' in signals and 'SXR 50' in signals and 'SXR 80' in signals:
         if 'HXR' in signals and 'CIII' in signals:
-            print('all')
+            return {
+                'ok': False,
+                'description': 'Not done yet'
+            }
         elif 'HXR' in signals:
-            print('hxr')
+            model = 'NEW_SEASON1_RNDe40d20msl8_SXR_with_zeros100_with_HXR.joblib'
         elif 'CIII' in signals:
-            print('ciii')
+            model = 'NEW_SEASON1_RNDe37d13msl8_SXR_with_zeros100_with_CIII.joblib'
         else:
-            print('just all sxr')
+            model = 'NEW_SEASON1_RNDe47d13msl8_SXR_with_zeros100_no27.joblib'
     elif 'SXR 27' in signals and 'SXR 50' in signals and 'SXR 80' in signals:
-        if 'HXR' in signals and 'CIII' in signals:
-            print('all')
-        elif 'HXR' in signals:
-            print('hxr')
-        elif 'CIII' in signals:
-            print('ciii')
-        else:
-            print('just all sxr')
+        return {
+            'ok': False,
+            'description': 'Not done yet'
+        }
     elif 'SXR 127' in signals:
         return {
             'ok': False,
@@ -144,3 +178,12 @@ def Te_prediction(shotn, signals):
             'ok': False,
             'description': 'Пожалуйста, выберите хотя бы 3 SXR сигнала'
         }
+    rnd_reg = joblib.load(model_path + model)
+    Te_from_SXR = rnd_reg.predict(work_data)
+    time = data['time']
+    print(Te_from_SXR)
+    print(type(Te_from_SXR))
+    return {
+        'ok': True,
+        'data': {'time': time, 'Te': list(smooth(Te_from_SXR, 401))}
+    }

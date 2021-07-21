@@ -71,3 +71,5 @@ class Handler:
                 'ok': False,
                 'description': 'Request is missing field "selected_signals".'
             }
+        resp = signals.Te_prediction(req['shotn'], req['selected_signals'])
+        return resp

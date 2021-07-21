@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset="UTF-8">
+    <title>View section</title>
+</head>
+
+<style>
+    /*draggable*/
+    .draggable {
+        position: absolute;
+        z-index: 9;
+        background-color: #e3fafc;
+        border: 1px solid #d3d3d3;
+        text-align: center;
+    }
+
+    .draggable-header {
+        padding: 10px;
+        cursor: move;
+        z-index: 10;
+        background-color: #2196F3;
+        color: #fff;
+    }
+
+    #Plotting {
+        font-size: x-large;
+        position: center;
+    }
+
+</style>
+
+
+<body>
+<div id="focus-all" tabindex="0">
+    <div class="row" id="db_row" style="
+            margin-left: 0;
+            margin-right: 0;
+            ">
+        <label for="shotn_man" accesskey="a">Shot №: </label><input id="shotn_man" type="number" min="30000" step="1" placeholder="Enter shot">
+    </div>
+
+    <hr>
+    <div class="container-fluid">
+        <div class="row" id="SXR_row">
+            <div class="col-xs-12 col-sm-3 col-md-2 col-lg-2">
+                <h3>Select signals:</h3>
+               <br>
+                <ul>
+                    <li><label for="SXR_15">SXR 15 mkm  </label> <input type="checkbox" id="SXR_15" checked></li>
+                    <li><label for="SXR_27">SXR 27 mkm  </label> <input type="checkbox" id="SXR_27" checked></li>
+                    <li><label for="SXR_50">SXR 50 mkm  </label> <input type="checkbox" id="SXR_50" checked></li>
+                    <li><label for="SXR_80">SXR 80 mkm  </label> <input type="checkbox" id="SXR_80" checked></li>
+                    <li><label for="SXR_127">SXR 127 mkm </label> <input type="checkbox" id="SXR_127" ></li>
+                    <li><label for="HXR">HXR </label> <input type="checkbox" id="HXR" checked></li>
+                    <li><label for="C_III">CIII </label> <input type="checkbox" id="C_III" checked></li>
+                </ul>
+
+                <hr>
+                <button class="btn btn-warning" id="plot_sht" data-toggle="collapse" data-target="#Plotting" aria-expanded="false" aria-controls="Plotting">Plot sht</button>
+
+                <button class="btn btn-success" id="Te_culc" data-toggle="collapse" data-target="#Culc_progress" aria-expanded="false" aria-controls="Culc_prograss">Temperature</button>
+                <div class="collapse" id="Culc_progress">Calculation in progress...</div>
+
+            </div>
+            <div class="col-xs-12 col-sm-9 col-md-10 col-lg-10">
+                <div id="Te_evol_plot" style="width:100%; height:400px;" class="context-target" te ml></div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div id="sht_graphs" class="draggable" hidden tabindex="1" style="width: 1600px;">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+                <div class="draggable-header" tabindex="2">Hold here to move</div>
+            </div>
+            <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+                <div class="collapse" id="Plotting">PLOTTING...</div>
+            </div>
+            <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+                <button class="btn btn-danger hide_btn">Hide window</button>
+            </div>
+        </div>
+    </div>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4">
+                <div id="SXR_15_plot" style="width:100%; height:400px;" class="context-target" sxr 15></div>
+            </div>
+            <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4">
+                <div id="SXR_27_plot" style="width:100%; height:400px;" class="context-target" sxr 27></div>
+            </div>
+            <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4">
+                <div id="SXR_50_plot" style="width:100%; height:400px;" class="context-target" sxr 50></div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4">
+                <div id="SXR_80_plot" style="width:100%; height:400px;" class="context-target" sxr 80></div>
+            </div>
+            <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4">
+                <div id="HXR_plot" style="width:100%; height:400px;" class="context-target" hxr></div>
+            </div>
+            <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4">
+                <div id="CIII_plot" style="width:100%; height:400px;" class="context-target" ciii></div>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+
+<script>
+    function Main() {
+        this.m_defaults = {
+            line_thickness_base: 2,
+            line_thickness_high: 4
+        }
+        this.palette = [
+            '#181818',
+            '#FF0000',
+            '#0000FF',
+            '#00FF00',
+            '#8A2BE2',
+            '#00FFFF',
+            '#006400',
+            '#DC143C',
+            '#008b8b',
+            '#4B0082',
+            '#FF8C00',
+            '#ADFF2F',
+            '#FF00FF',
+            '#808000',
+            '#FF4500',
+            '#FFFF00',
+        ];
+        this.selectors = {
+            SXR15: $('#SXR_15'),
+            SXR27: $('#SXR_27'),
+            SXR50: $('#SXR_50'),
+            SXR80: $('#SXR_80'),
+            SXR127: $('#SXR_127'),
+            CIII: $('#C_III'),
+            HXR: $('#HXR'),
+            shtGraphs: $('#sht_graphs')[0],
+            draggables: $('.draggable'),
+            isShowSingleEvent: $('#is_show')
+        }
+        this.ShowEvent = function () {
+            console.log('showing...');
+            this.selectors.shtGraphs.removeAttribute('hidden');
+            this.Sht_load();
+        }
+
+
+        this.m_Te_evol = new CanvasJS.Chart("Te_evol_plot", {
+            zoomEnabled: true,
+            panEnabled: true,
+            title: {
+                text: 'Electron temperature evolution',
+                fontSize: 14,
+                fontFamily: 'arial'
+            },
+            axisY: {
+                includeZero: true,
+                title: 'Electron temperature, eV',
+                titleFontSize: 12,
+                fontFamily: 'arial',
+                minimum: 0
+            },
+            axisX: {
+                title: "Time, ms",
+                titleFontSize: 12,
+                fontFamily: 'arial'
+            },
+            toolTip: {
+                //backgroundColor: "rgba(255,255,255,.2)",
+                shared: true,
+                contentFormatter: function (e) {
+                    let text = '<p>time = ' + e.entries[0].dataPoint.x.toFixed(1) + ' ms</p>';
+                    for (let entry of e.entries) {
+                        text += '<p style="color:' + entry.dataSeries.color + ';">' + ' T<sub>e</sub> = ' + entry.dataPoint.y.toFixed(1);
+                    }
+                    return text;
+                }.bind(this),
+                updated: function (e) {
+                    console.log('update toolTip', e);
+                }.bind(this),
+                hidden: function () {
+                    console.log('hide toolTip', e);
+                }.bind(this)
+            },
+            data: []
+        });
+
+        this.m_SXR_15_plot = new CanvasJS.Chart("SXR_15_plot", {
+            backgroundColor: '#e3fafc',
+            zoomEnabled: true,
+            panEnabled: true,
+            title: {
+                text: 'SXR 15 mkm',
+                fontSize: 14,
+                fontFamily: 'arial'
+            },
+            axisY: {
+                includeZero: true,
+                title: 'Signal, V',
+                titleFontSize: 12,
+                fontFamily: 'arial',
+                minimum: 0
+            },
+            axisX: {
+                title: "Time, ms",
+                titleFontSize: 12,
+                fontFamily: 'arial'
+            },
+            toolTip: {
+                //backgroundColor: "rgba(255,255,255,.2)",
+                shared: true,
+                contentFormatter: function (e) {
+                    let text = '<p>time = ' + e.entries[0].dataPoint.x.toFixed(1) + ' ms</p>';
+                    for (let entry of e.entries) {
+                        text += '<p> Signal = ' + entry.dataPoint.y.toFixed(1) + ' V </p>';
+                    }
+                    return text;
+                }.bind(this),
+                updated: function (e) {
+                    console.log('update toolTip', e);
+                }.bind(this),
+                hidden: function () {
+                    console.log('hide toolTip', e);
+                }.bind(this)
+            },
+            data: []
+        });
+
+        this.m_SXR_27_plot = new CanvasJS.Chart("SXR_27_plot", {
+            backgroundColor: '#e3fafc',
+            zoomEnabled: true,
+            panEnabled: true,
+            title: {
+                text: 'SXR 27 mkm',
+                fontSize: 14,
+                fontFamily: 'arial'
+            },
+            axisY: {
+                includeZero: true,
+                title: 'Signal, V',
+                titleFontSize: 12,
+                fontFamily: 'arial',
+                minimum: 0
+            },
+            axisX: {
+                title: "Time, ms",
+                titleFontSize: 12,
+                fontFamily: 'arial'
+            },
+            toolTip: {
+                //backgroundColor: "rgba(255,255,255,.2)",
+                shared: true,
+                contentFormatter: function (e) {
+                    let text = '<p>time = ' + e.entries[0].dataPoint.x.toFixed(1) + ' ms</p>';
+                    for (let entry of e.entries) {
+                        text += '<p> Signal = ' + entry.dataPoint.y.toFixed(1) + ' V </p>';
+                    }
+                    return text;
+                }.bind(this),
+                updated: function (e) {
+                    console.log('update toolTip', e);
+                }.bind(this),
+                hidden: function () {
+                    console.log('hide toolTip', e);
+                }.bind(this)
+            },
+            data: []
+        });
+
+        this.m_SXR_50_plot = new CanvasJS.Chart("SXR_50_plot", {
+            backgroundColor: '#e3fafc',
+            zoomEnabled: true,
+            panEnabled: true,
+            title: {
+                text: 'SXR 50 mkm',
+                fontSize: 14,
+                fontFamily: 'arial'
+            },
+            axisY: {
+                includeZero: true,
+                title: 'Signal, V',
+                titleFontSize: 12,
+                fontFamily: 'arial',
+                minimum: 0
+            },
+            axisX: {
+                title: "Time, ms",
+                titleFontSize: 12,
+                fontFamily: 'arial'
+            },
+            toolTip: {
+                //backgroundColor: "rgba(255,255,255,.2)",
+                shared: true,
+                contentFormatter: function (e) {
+                    let text = '<p>time = ' + e.entries[0].dataPoint.x.toFixed(1) + ' ms</p>';
+                    for (let entry of e.entries) {
+                        text += '<p> Signal = ' + entry.dataPoint.y.toFixed(1) + ' V </p>';
+                    }
+                    return text;
+                }.bind(this),
+                updated: function (e) {
+                    console.log('update toolTip', e);
+                }.bind(this),
+                hidden: function () {
+                    console.log('hide toolTip', e);
+                }.bind(this)
+            },
+            data: []
+        });
+
+        this.m_SXR_80_plot = new CanvasJS.Chart("SXR_80_plot", {
+            backgroundColor: '#e3fafc',
+            zoomEnabled: true,
+            panEnabled: true,
+            title: {
+                text: 'SXR 80 mkm',
+                fontSize: 14,
+                fontFamily: 'arial'
+            },
+            axisY: {
+                includeZero: true,
+                title: 'Signal, V',
+                titleFontSize: 12,
+                fontFamily: 'arial',
+                minimum: 0
+            },
+            axisX: {
+                title: "Time, ms",
+                titleFontSize: 12,
+                fontFamily: 'arial'
+            },
+            toolTip: {
+                //backgroundColor: "rgba(255,255,255,.2)",
+                shared: true,
+                contentFormatter: function (e) {
+                    let text = '<p>time = ' + e.entries[0].dataPoint.x.toFixed(1) + ' ms</p>';
+                    for (let entry of e.entries) {
+                        text += '<p> Signal = ' + entry.dataPoint.y.toFixed(1) + ' V </p>';
+                    }
+                    return text;
+                }.bind(this),
+                updated: function (e) {
+                    console.log('update toolTip', e);
+                }.bind(this),
+                hidden: function () {
+                    console.log('hide toolTip', e);
+                }.bind(this)
+            },
+            data: []
+        });
+
+        this.m_CIII_plot = new CanvasJS.Chart("CIII_plot", {
+            backgroundColor: '#e3fafc',
+            zoomEnabled: true,
+            panEnabled: true,
+            title: {
+                text: 'CIII',
+                fontSize: 14,
+                fontFamily: 'arial'
+            },
+            axisY: {
+                includeZero: true,
+                title: 'Signal, V',
+                titleFontSize: 12,
+                fontFamily: 'arial',
+                minimum:0
+            },
+            axisX: {
+                title: "Time, ms",
+                titleFontSize: 12,
+                fontFamily: 'arial'
+            },
+            toolTip: {
+                //backgroundColor: "rgba(255,255,255,.2)",
+                shared: true,
+                contentFormatter: function (e) {
+                    let text = '<p>time = ' + e.entries[0].dataPoint.x.toFixed(1) + ' ms</p>';
+                    for (let entry of e.entries) {
+                        text += '<p> Signal = ' + entry.dataPoint.y.toFixed(1) + ' V </p>';
+                    }
+                    return text;
+                }.bind(this),
+                updated: function (e) {
+                    console.log('update toolTip', e);
+                }.bind(this),
+                hidden: function () {
+                    console.log('hide toolTip', e);
+                }.bind(this)
+            },
+            data: []
+        });
+
+        this.m_HXR_plot = new CanvasJS.Chart("HXR_plot", {
+            backgroundColor: '#e3fafc',
+            zoomEnabled: true,
+            panEnabled: true,
+            title: {
+                text: 'HXR',
+                fontSize: 14,
+                fontFamily: 'arial'
+            },
+            axisY: {
+                includeZero: true,
+                title: 'Signal, V',
+                titleFontSize: 12,
+                fontFamily: 'arial',
+                minimum: 0
+            },
+            axisX: {
+                title: "Time, ms",
+                titleFontSize: 12,
+                fontFamily: 'arial'
+            },
+            toolTip: {
+                //backgroundColor: "rgba(255,255,255,.2)",
+                shared: true,
+                contentFormatter: function (e) {
+                    let text = '<p>time = ' + e.entries[0].dataPoint.x.toFixed(1) + ' ms</p>';
+                    for (let entry of e.entries) {
+                        text += '<p> Signal = ' + entry.dataPoint.y.toFixed(1) + ' V </p>';
+                    }
+                    return text;
+                }.bind(this),
+                updated: function (e) {
+                    console.log('update toolTip', e);
+                }.bind(this),
+                hidden: function () {
+                    console.log('hide toolTip', e);
+                }.bind(this)
+            },
+            data: []
+        });
+
+        this.Request = function (req, callback) {
+            req.subsystem = 'view';
+            $.post('/api', JSON.stringify(req), function (resp) {
+                if (!resp['ok']) {
+                    //console.log(resp);
+                    alert(resp['description']);
+                } else {
+                    callback(resp);
+                }
+            }, 'json');
+        };
+
+        this.DrawSHT = function () {
+            this.m_SXR_15_plot.options.data = [];
+            this.m_SXR_27_plot.options.data = [];
+            this.m_SXR_50_plot.options.data = [];
+            this.m_SXR_80_plot.options.data = [];
+            this.m_HXR_plot.options.data = [];
+            this.m_CIII_plot.options.data = [];
+
+            this.m_SXR_15_plot.options.data.push(
+                {
+                    type: "line",
+                    color: this.palette[0],
+                    visible: true,
+                    markerType: "none",
+                    connectNullData: true,
+                    nullDataLineDashType: "dot",
+                    dataPoints: []
+                }
+            );
+
+            this.m_SXR_27_plot.options.data.push(
+                {
+                    type: "line",
+                    color: this.palette[0],
+                    visible: true,
+                    markerType: "none",
+                    connectNullData: true,
+                    nullDataLineDashType: "dot",
+                    dataPoints: []
+                }
+            );
+
+            this.m_SXR_50_plot.options.data.push(
+                {
+                    type: "line",
+                    color: this.palette[0],
+                    visible: true,
+                    markerType: "none",
+                    connectNullData: true,
+                    nullDataLineDashType: "dot",
+                    dataPoints: []
+                }
+            );
+
+            this.m_SXR_80_plot.options.data.push(
+                {
+                    type: "line",
+                    color: this.palette[0],
+                    visible: true,
+                    markerType: "none",
+                    connectNullData: true,
+                    nullDataLineDashType: "dot",
+                    dataPoints: []
+                }
+            );
+
+            this.m_HXR_plot.options.data.push(
+                {
+                    type: "line",
+                    color: this.palette[0],
+                    visible: true,
+                    markerType: "none",
+                    connectNullData: true,
+                    nullDataLineDashType: "dot",
+                    dataPoints: []
+                }
+            );
+
+            this.m_CIII_plot.options.data.push(
+                {
+                    type: "line",
+                    color: this.palette[0],
+                    visible: true,
+                    markerType: "none",
+                    connectNullData: true,
+                    nullDataLineDashType: "dot",
+                    dataPoints: []
+                }
+            );
+
+            //this.m_SXR_15_plot.render();
+            //this.m_SXR_27_plot.render();
+            //this.m_SXR_50_plot.render();
+            //this.m_SXR_80_plot.render();
+            //this.m_HXR_plot.render();
+            //this.m_CIII_plot.render();
+        }
+
+        this.DrawMain = function () {
+            this.m_Te_evol.options.data = []
+
+            this.m_Te_evol.options.data.push(
+                {
+                    type: "line",
+                    visible: true,
+                    color: this.palette[0],
+                    markerType: "none",
+                    connectNullData: true,
+                    nullDataLineDashType: "dot",
+                    dataPoints: []
+                }
+            );
+
+            this.m_Te_evol.render();
+        }
+
+        this.Select = function () {
+            let shotn = $('#shotn_man').val();
+            console.log('Shot number is', shotn);
+            this.Te_evol_count = 0;
+            this.DrawMain();
+        };
+
+        this.hidePlotting = function () {
+            $('#Plotting').collapse('hide');
+        }
+        this.Culc_progressbar = function () {
+            $('#Culc_progress').collapse('hide');
+        }
+
+        this.graphs = [
+            this.m_SXR_15_plot,
+            this.m_SXR_27_plot,
+            this.m_SXR_50_plot,
+            this.m_SXR_80_plot,
+            this.m_HXR_plot,
+            this.m_CIII_plot
+        ];
+
+        this.Te_evol_count = 0;
+
+        this.Sht_load = function () {
+            let shotn = $('#shotn_man').val();
+            let sht_list = [this.selectors.SXR15[0].checked, this.selectors.SXR27[0].checked, this.selectors.SXR50[0].checked,
+                this.selectors.SXR80[0].checked, this.selectors.SXR127[0].checked, this.selectors.HXR[0].checked, this.selectors.CIII[0].checked];
+            let sht_all = ['SXR 15', 'SXR 27', 'SXR 50', 'SXR 80', 'SXR 127', 'HXR', 'CIII'];
+            let sht_use = []
+            for (let sht=0; sht<sht_list.length; sht++) {
+                if (sht_list[sht])
+                    sht_use.push(sht_all[sht]);
+            }
+            this.Request(
+                {
+                    subsystem: 'view',
+                    reqtype: 'selected_signals',
+                    shotn: shotn,
+                    selected_signals: sht_use
+                }, function (resp) {
+                    console.log(resp);
+                    let data = resp['data'];
+                    //console.log(data);
+                    this.DrawSHT();
+
+                    for (let sht=0; sht<sht_use.length; sht++) {
+                        this.graphs[sht].render();
+                        this.graphs[sht].title.set('text', sht_use[sht]);
+                        for (let event_ind = 0; event_ind < data['time'].length; event_ind++) {
+                            this.graphs[sht].options.data[0].dataPoints.push(
+                                {
+                                    x: data['time'][event_ind],
+                                    y: data[sht_use[sht]][event_ind]
+                                }
+                            );
+                        }
+                        this.graphs[sht].render();
+                    }
+                    this.hidePlotting();
+
+                    for (let sht=sht_use.length; sht<sht_all.length; sht++) {
+                        this.graphs[sht].clearCanvas();
+                    }
+
+
+                }.bind(this)
+            );
+            console.log('Req out');
+        };
+
+        this.Refresh = function () {
+            console.log('Refresh button pressed.');
+            this.Request({
+                reqtype: 'refresh',
+                arg: 'example'
+            }, function(resp){
+                console.log(resp);
+            });
+        };
+
+        this.get_Te_evol = function () {
+            let shotn = $('#shotn_man').val();
+            let sht_list = [this.selectors.SXR15[0].checked, this.selectors.SXR27[0].checked, this.selectors.SXR50[0].checked,
+                this.selectors.SXR80[0].checked, this.selectors.SXR127[0].checked, this.selectors.HXR[0].checked, this.selectors.CIII[0].checked];
+            let sht_all = ['SXR 15', 'SXR 27', 'SXR 50', 'SXR 80', 'SXR 127', 'HXR', 'CIII'];
+            let sht_use = []
+            for (let sht=0; sht<sht_list.length; sht++) {
+                if (sht_list[sht])
+                    sht_use.push(sht_all[sht]);
+            }
+            this.Request(
+                {
+                    subsystem: 'view',
+                    reqtype: 'get_temp',
+                    shotn: shotn,
+                    selected_signals: sht_use
+                }, function (resp) {
+                    console.log(resp);
+                    let data = resp['data'];
+                    console.log(this.Te_evol_count);
+
+                    if (this.Te_evol_count > 0) {
+                        this.m_Te_evol.options.data.push(
+                            {
+                                type: "line",
+                                visible: true,
+                                color: this.palette[this.Te_evol_count],
+                                markerType: "none",
+                                connectNullData: true,
+                                nullDataLineDashType: "dot",
+                                dataPoints: []
+                            }
+                        );
+                    }
+
+
+                    for (let event_ind = 0; event_ind < data['time'].length; event_ind++) {
+                        this.m_Te_evol.options.data[this.Te_evol_count].dataPoints.push(
+                            {
+                                x: data['time'][event_ind],
+                                y: data['Te'][event_ind]
+                            }
+                        );
+                    }
+                    this.Culc_progressbar();
+                    this.m_Te_evol.render();
+                    this.Te_evol_count++;
+                }.bind(this)
+                );
+            console.log('Te_culc')
+
+        }
+
+        this.ConnectControls = function () {
+            $('#shot_refresh').on('click', this, this.Refresh.bind(this));
+            $('#shotn_man').on('change', this, this.Select.bind(this));
+            $('#Te_culc').on('click', this, this.get_Te_evol.bind(this));
+            //$('#plot_sht').on('click', this, this.Sht_load.bind(this));
+            $('#plot_sht').on('click', this, this.ShowEvent.bind(this));
+
+            this.initDragElement(this.selectors.draggables);
+            this.initResizeElement(this.selectors.draggables);
+
+            $('.hide_btn').each(function (el) {
+                this.addEventListener('click', function (e) {
+                    $(this).parents('.draggable').attr('hidden', true);
+                });
+            });
+        }
+
+        this.initDragElement = function (elements) {
+            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            let current;
+            $(elements).each(function () {
+                $(this).find('.draggable-header')[0].onmousedown = dragMouseDown;
+                this.style.top = 10 + '%';
+                this.style.left = 2.5 + '%'
+            })
+
+            function dragMouseDown(e) {
+                current = $(e.target).parents('.draggable')[0];
+                //e.preventDefault();
+                // get the mouse cursor position at startup:
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                document.onmouseup = closeDragElement;
+                // call a function whenever the cursor moves:
+                document.onmousemove = elementDrag;
+            }
+
+            function elementDrag(e) {
+                e.stopPropagation();
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+
+                current.style.top = (current.offsetTop - pos2) + "px";
+                current.style.left = (current.offsetLeft - pos1) + "px";
+            }
+
+            function closeDragElement() {
+                document.onmouseup = null;
+                document.onmousemove = null;
+            }
+        };
+
+        this.initResizeElement = function (elements) {
+            let startX, startY, startWidth, startHeight;
+            let current;
+
+            this.doDrag = function (e) {
+
+                e.stopPropagation();
+                current.style.width = startWidth + e.clientX - startX + "px";
+                current.style.height = startHeight + e.clientY - startY + "px";
+            };
+
+            this.stopDrag = function () {
+                document.documentElement.removeEventListener("mousemove", this.doDrag, false);
+                document.documentElement.removeEventListener("mouseup", this.stopDrag, false);
+                //render only child charts
+
+                this.m_fitting_chart.render();
+                this.m_raw_chart.render();
+                this.m_chi_chart.render();
+            }.bind(this);
+
+            this.initDrag = function (e) {
+                e.stopPropagation();
+                startX = e.clientX;
+                startY = e.clientY;
+                current = e.target.parentPopup;
+                startWidth = parseInt(
+                    document.defaultView.getComputedStyle(current).width,
+                    10
+                );
+                startHeight = parseInt(
+                    document.defaultView.getComputedStyle(current).height,
+                    10
+                );
+                document.documentElement.addEventListener("mousemove", this.doDrag, false);
+                document.documentElement.addEventListener("mouseup", this.stopDrag, false);
+            }.bind(this);
+
+            for (let ind = 0; ind < elements.length; ind++) {
+                let dragElmnt = elements[ind];
+
+                let right = document.createElement("div");
+                right.className = "resizer-right";
+                dragElmnt.appendChild(right);
+                right.addEventListener("mousedown", this.initDrag, false);
+                right.parentPopup = dragElmnt;
+
+                let bottom = document.createElement("div");
+                bottom.className = "resizer-bottom";
+                dragElmnt.appendChild(bottom);
+                bottom.addEventListener("mousedown", this.initDrag, false);
+                bottom.parentPopup = dragElmnt;
+
+                let both = document.createElement("div");
+                both.className = "resizer-both";
+                dragElmnt.appendChild(both);
+                both.addEventListener("mousedown", this.initDrag, false);
+                both.parentPopup = dragElmnt;
+            }
+        };
+
+        this.ConnectControls();
+
+    }
+
+    $(document).ready(
+        function () {
+            let this_html = new Main();
+            this_html.DrawMain();
+            console.log('loaded successfully', this_html);
+        }
+    );
+</script>
+
+</html>
