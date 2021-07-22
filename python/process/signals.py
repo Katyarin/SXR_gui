@@ -110,10 +110,12 @@ def Te_prediction(shotn, signals):
         return first
     data = first['data']
     norm_data = pd.DataFrame(data)
+    err = 'unknown'
     if 'SXR 15' in signals and 'SXR 27' in signals and 'SXR 50' in signals and 'SXR 80' in signals:
         if 'HXR' in signals and 'CIII' in signals:
             model = 'PART3_RNDe34d19msl11_HXR_SXR_with_zeros100_immisC_time.joblib'
             work_data = norm_data.drop('Shotn', axis=1)
+            err = '18%'
             print('ok 1')
         elif 'HXR' in signals:
             return {
@@ -128,6 +130,7 @@ def Te_prediction(shotn, signals):
         else:
             model = 'NEW_SEASON1_RNDe30d19msl7_SXR.joblib'
             work_data = norm_data.drop('Shotn', axis=1)
+            err = '22%'
     elif 'SXR 15' in signals and 'SXR 27' in signals and 'SXR 50' in signals:
         return {
             'ok': False,
@@ -185,5 +188,5 @@ def Te_prediction(shotn, signals):
     print(type(Te_from_SXR))
     return {
         'ok': True,
-        'data': {'time': time, 'Te': list(smooth(Te_from_SXR, 401))}
+        'data': {'time': time, 'Te': list(smooth(Te_from_SXR, 401)), 'error': err}
     }

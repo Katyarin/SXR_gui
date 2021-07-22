@@ -252,7 +252,7 @@
                     updated: function (e) {
                         console.log('update crosshair', e);
                     }.bind(this),
-                    hidden: function () {
+                    hidden: function (e) {
                         console.log('hide crosshair', e);
                     }.bind(this)
                 },
@@ -269,10 +269,10 @@
                     return text;
                 }.bind(this),
                 updated: function (e) {
-                    console.log('update toolTip', e);
+                    //console.log('update toolTip', e);
                 }.bind(this),
-                hidden: function () {
-                    console.log('hide toolTip', e);
+                hidden: function (e) {
+                    //console.log('hide toolTip', e);
                 }.bind(this)
             },
             legend: {

@@ -34,15 +34,13 @@
                     </a>
                 </div>
                 <ul class="nav navbar-nav">
-                    <button class="btn btn-success navbar-btn" id="new_btn">
-                        New
+                    <button class="btn btn-success navbar-btn" id="ML_btn">
+                        ML temperature
                     </button>
-                    <!--<button class="btn btn-success navbar-btn" id="acquire_btn">
-                        Acquisition
+                    <button class="btn btn-success navbar-btn" id="Interpolation_btn">
+                        Interpolation
                     </button>
-                    <button class="btn btn-success navbar-btn" id="calibr_btn">
-                        Calibration
-                    </button>-->
+
                     <button class="btn btn-success navbar-btn" id="view_btn">
                         View
                     </button>
@@ -76,8 +74,11 @@
                 $.post('/api', JSON.stringify(req), callback, 'json');
             };
 
-            this.displayNew = function(ev) {
+            this.displayML = function(ev) {
                 let self = ev.data;
+                document.getElementById('ML_btn').style.backgroundColor = 'orange';
+                document.getElementById('view_btn').style.backgroundColor = 'green';
+                document.getElementById('Interpolation_btn').style.backgroundColor = 'green';
                 console.log('display config');
                 self.m_container.empty();
                 self.m_container.load('js/new_viewSection.html');
@@ -85,16 +86,30 @@
 
 
             this.displayView = function(ev) {
+                document.getElementById('ML_btn').style.backgroundColor = 'green';
+                document.getElementById('view_btn').style.backgroundColor = 'orange';
+                document.getElementById('Interpolation_btn').style.backgroundColor = 'green';
                 let self = ev.data;
                 //console.log('display view');
                 self.m_container.empty();
                 self.m_container.load('js/viewSection.html');
             };
 
+            this.displayInter = function(ev) {
+                document.getElementById('ML_btn').style.backgroundColor = 'green';
+                document.getElementById('view_btn').style.backgroundColor = 'green';
+                document.getElementById('Interpolation_btn').style.backgroundColor = 'orange';
+                let self = ev.data;
+                //console.log('display view');
+                self.m_container.empty();
+                self.m_container.load('js/InterSection.html');
+            };
+
             this.BuildControls = function () {
-                $('#new_btn').on('click', this, this.displayNew);
+                $('#ML_btn').on('click', this, this.displayML);
                 $('#view_btn').on('click', this, this.displayView);
-                this.displayNew({data: this});
+                $('#Interpolation_btn').on('click', this, this.displayInter);
+                this.displayML({data: this});
             };
 
             this.BuildControls();
