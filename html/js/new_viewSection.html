@@ -6,6 +6,11 @@
 </head>
 
 <style>
+    .Te-col {
+        border-right: 1px solid;
+        padding-right: 20px;
+    }
+
     /*draggable*/
     .draggable {
         position: absolute;
@@ -92,9 +97,12 @@
 
                 <button class="btn btn-success" id="Te_culc" data-toggle="collapse" data-target="#Culc_progress" aria-expanded="false" aria-controls="Culc_prograss">Temperature</button>
                 <div class="collapse" id="Culc_progress">Calculation in progress...</div>
+                <br>
+                <br>
+                <button class="btn btn-danger" id="TS_btn">Thomson Scattering</button>
 
             </div>
-            <div class="col-xs-12 col-sm-7 col-md-8 col-lg-8">
+            <div class="col-xs-12 col-sm-7 col-md-8 col-lg-8 Te-col">
                 <div id="Te_evol_plot" style="width:100%; height:400px;" class="context-target" te ml></div>
             </div>
             <div class="col-xs-12 col-sm-2 col-md-2 col-lg-2">
@@ -597,7 +605,7 @@
         this.DrawMain = function () {
             this.m_Te_evol.options.data = []
 
-            this.m_Te_evol.options.data.push(
+            /*this.m_Te_evol.options.data.push(
                 {
                     type: "line",
                     visible: true,
@@ -650,6 +658,7 @@
         ];
 
         this.Te_evol_count = 0;
+        this.pallete_count = 0;
 
         this.Sht_load = function () {
             let shotn = $('#shotn_man').val();
@@ -730,14 +739,14 @@
                     console.log(resp);
                     let data = resp['data'];
                     console.log(this.Te_evol_count);
-                    text_block.innerHTML += '<p style="color:' + this.palette[this.Te_evol_count] + ';">' + 'Calculation error: ' + data['error'];
+                    text_block.innerHTML += '<p style="color:' + this.palette[this.pallete_count] + ';">' + 'Calculation error: ' + data['error'];
 
-                    if (this.Te_evol_count > 0) {
+                    if (this.Te_evol_count >= 0) {
                         this.m_Te_evol.options.data.push(
                             {
                                 type: "line",
                                 visible: true,
-                                color: this.palette[this.Te_evol_count],
+                                color: this.palette[this.pallete_count],
                                 markerType: "none",
                                 connectNullData: true,
                                 nullDataLineDashType: "dot",
@@ -773,6 +782,7 @@
                     this.Culc_progressbar();
                     this.m_Te_evol.render();
                     this.Te_evol_count++;
+                    this.pallete_count++;
                     //this.Te_evol_count++;
                 }.bind(this)
                 );
@@ -780,11 +790,69 @@
 
         }
 
+        this.DrawTS = function () {
+            let shotn = $('#shotn_man').val();
+            this.Request(
+                {
+                    subsystem: 'view',
+                    reqtype: 'TS_show',
+                    shotn: shotn
+                }, function (resp) {
+                    console.log(resp);
+                    let data = resp['data'];
+                    this.m_Te_evol.options.data.push(
+                        {
+                            type: "line",
+                            visible: true,
+                            color: '#FFCCFF',
+                            markerType: "none",
+                            connectNullData: true,
+                            nullDataLineDashType: "dot",
+                            //toolTipContent: "<b>time: </b>{x} <br/><b>Te_TS: </b>{y}",
+                            dataPoints: []
+                        }
+                    );
+                    this.m_Te_evol.options.data.push(
+                        {
+                            type: "error",
+                            showInLegend: false,
+                            visible: true,
+                            color: '#FFCCFF',
+                            //toolTipContent: "<b>Te_TS_err: </b>{y}",
+                            dataPoints: []
+                        }
+                    );
+                    for (let event_ind = 0; event_ind < data['time'].length; event_ind++) {
+                        this.m_Te_evol.options.data[this.Te_evol_count].dataPoints.push(
+                            {
+                                x: data['time'][event_ind],
+                                y: data['data'][event_ind]
+                            }
+                        );
+                    }
+                    for (let event_ind = 0; event_ind < data['time'].length; event_ind++) {
+                        this.m_Te_evol.options.data[this.Te_evol_count+1].dataPoints.push(
+                            {
+                                x: data['time'][event_ind],
+                                y: [data['data'][event_ind] - data['err'][event_ind], data['data'][event_ind] + data['err'][event_ind]]
+                            }
+                        );
+                    }
+                    this.Te_evol_count++;
+                    this.Te_evol_count++;
+                    this.m_Te_evol.render();
+                }.bind(this)
+                );
+        }
+
+
         this.ConnectControls = function () {
             $('#shot_refresh').on('click', this, this.Refresh.bind(this));
             $('#shotn_man').on('change', this, this.Select.bind(this));
             $('#Te_culc').on('click', this, this.get_Te_evol.bind(this));
             $('#plot_sht').on('click', this, this.ShowEvent.bind(this));
+            $('#TS_btn').on('click', this, this.DrawTS.bind(this));
+
 
             this.initDragElement(this.selectors.draggables);
             this.initResizeElement(this.selectors.draggables);
@@ -899,7 +967,7 @@
     $(document).ready(
         function () {
             let this_html = new Main();
-            this_html.DrawMain();
+            //this_html.DrawMain();
             console.log('loaded successfully', this_html);
         }
     );

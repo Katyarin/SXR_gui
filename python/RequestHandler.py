@@ -14,7 +14,9 @@ class Handler:
                 'refresh': self.refresh_func,
                 'get_shot': self.get_shot,
                 'selected_signals': self.view_sig,
-                'get_temp': self.get_te
+                'get_temp': self.get_te,
+                'TS_show': self.get_TS,
+                'get_inter_te': self.get_Te_interpolation
             }
         }
         self.models_path = '%s%s' % (SXR_path, models_path)
@@ -72,4 +74,28 @@ class Handler:
                 'description': 'Request is missing field "selected_signals".'
             }
         resp = signals.Te_prediction(req['shotn'], req['selected_signals'])
+        return resp
+
+    def get_TS(self, req):
+        print('we are here')
+        if 'shotn' not in req:
+            return {
+                'ok': False,
+                'description': 'Request is missing field "shotn".'
+            }
+        resp = signals.get_TS_data(req['shotn'])
+        return resp
+
+    def get_Te_interpolation(self, req):
+        if 'shotn' not in req:
+            return {
+                'ok': False,
+                'description': 'Request is missing field "shotn".'
+            }
+        if 'selected_signals' not in req:
+            return {
+                'ok': False,
+                'description': 'Request is missing field "selected_signals".'
+            }
+        resp = signals.Te_interpolation(req['shotn'], req['selected_signals'])
         return resp
